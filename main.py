@@ -135,6 +135,7 @@ async def search_linkedin(niche, city, max_items):
         data = res.json()
 
     # Handle LinkedIn response
+    print("LinkedIn raw response:", data)
     items = []
     if isinstance(data, list):
         items = data
