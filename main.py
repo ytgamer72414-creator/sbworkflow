@@ -71,4 +71,6 @@ def health(): return {"status": "ok"}
 
 @app.get("/", response_class=HTMLResponse)
 def frontend():
-    return open("index.html").read()
+   import pathlib
+html_path = pathlib.Path(__file__).parent / "index.html"
+return html_path.read_text()
