@@ -90,7 +90,7 @@ async def search_leads(req: SearchRequest):
     actor_map = {
         "instagram": ("apify/instagram-hashtag-scraper", {"hashtags": [req.niche.replace(" ", "")], "resultsLimit": req.maxItems}),
         "linkedin": ("curious_coder/linkedin-company-scraper", {"searchKeywords": f"{req.niche} {req.city}".strip(), "maxResults": req.maxItems}),
-        "google": ("apify/google-search-scraper", {"queries": f"{req.niche} {req.city} contact email".strip(), "resultsPerPage": req.maxItems, "maxPagesPerQuery": 1})
+        "google": ("apify~google-search-scraper", {"queries": f"{req.niche} {req.city} contact email".strip(), "resultsPerPage": req.maxItems, "maxPagesPerQuery": 1})
     }
     actor_id, input_data = actor_map.get(req.platform, actor_map["google"])
     async with httpx.AsyncClient(timeout=120) as client:
