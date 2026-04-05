@@ -1,172 +1,425 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-import httpx
-import re
-import os
-import pathlib
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SBWorkflow Lead Engine</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; }
 
-app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+  /* HEADER */
+  .header { background: #1a1a2e; border-bottom: 1px solid #2a2a4a; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-logo { display: flex; align-items: center; gap: 12px; }
+  .header-logo .icon { width: 36px; height: 36px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header-logo h1 { font-size: 18px; font-weight: 700; color: #fff; }
+  .header-logo p { font-size: 11px; color: #888; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { padding: 8px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: #888; transition: all 0.2s; }
+  .nav-tab.active { background: #7c3aed; color: #fff; }
+  .nav-tab:hover:not(.active) { background: #2a2a4a; color: #fff; }
 
-RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "d3fd1e720fmsh6ff53a31e928ecdp19fa06jsn4d98e98c079c")
+  /* MAIN */
+  .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
 
-class SearchRequest(BaseModel):
-    niche: str
-    city: str = ""
-    platform: str = "google"
-    maxItems: int = 10
+  /* SEARCH CARD */
+  .search-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+  .search-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .search-card p { font-size: 13px; color: #666; margin-bottom: 24px; }
 
-def extract_email(text):
-    m = re.search(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-z]{2,}', text or "")
-    return m.group(0) if m else ""
+  /* FORM ROW */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 160px auto; gap: 12px; align-items: end; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group select, .form-group input { background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; outline: none; transition: border 0.2s; width: 100%; }
+  .form-group select:focus, .form-group input:focus { border-color: #7c3aed; }
+  .form-group select option { background: #1a1a2e; }
+  .btn-search { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; border: none; border-radius: 10px; padding: 11px 28px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; height: 44px; }
+  .btn-search:hover { opacity: 0.9; }
+  .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
 
-def extract_phone(text):
-    m = re.search(r'[\+]?[\d][\d\s\-().]{7,}', text or "")
-    return m.group(0).strip() if m else ""
+  /* PLATFORM TABS */
+  .platform-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .platform-card { border: 2px solid #2a2a4a; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .platform-card.active { border-color: #7c3aed; background: #1e1b4b; }
+  .platform-card:hover:not(.active) { border-color: #4a4a6a; }
+  .platform-card .p-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .platform-card .p-desc { font-size: 12px; color: #666; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #16a34a; color: #fff; font-weight: 600; }
 
-async def search_google(niche, city, max_items):
-    query = f"{niche} {city} contact email".strip()
-    url = "https://google-search74.p.rapidapi.com/"
-    headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "google-search74.p.rapidapi.com",
-        "Content-Type": "application/json"
-    }
-    params = {"query": query, "limit": str(max_items), "related_keywords": "true"}
-    async with httpx.AsyncClient(timeout=30) as client:
-        res = await client.get(url, headers=headers, params=params)
-        data = res.json()
-    results = data.get("results", [])
-    leads = []
-    for i, item in enumerate(results[:max_items]):
-        desc = (item.get("description") or "") + " " + (item.get("url") or "")
-        url_val = item.get("url") or ""
-        name = item.get("title") or "Unknown"
-        leads.append({
-            "id": i+1,
-            "name": name,
-            "handle": "—",
-            "instaLink": url_val if "instagram.com" in url_val else None,
-            "linkedinLink": url_val if "linkedin.com" in url_val else None,
-            "email": extract_email(desc),
-            "phone": extract_phone(desc),
-            "followers": "—",
-            "niche": niche,
-            "source": "Google",
-            "score": 65 if extract_email(desc) else 35,
-            "platform": "google"
-        })
-    return leads
+  /* LIVE LOG */
+  .log-box { background: #0a0a14; border: 1px solid #1a1a2e; border-radius: 10px; padding: 14px 16px; margin-top: 16px; max-height: 120px; overflow-y: auto; display: none; }
+  .log-box.show { display: block; }
+  .log-line { font-size: 12px; color: #666; margin-bottom: 4px; font-family: monospace; }
+  .log-line.success { color: #22c55e; }
+  .log-line.error { color: #ef4444; }
+  .log-line.warn { color: #f59e0b; }
 
-async def search_instagram(niche, city, max_items):
-    # Search Instagram users by hashtag using stable API
-    url = "https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_followers_v2.php"
-    headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "instagram-scraper-stable-api.p.rapidapi.com",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    # Search for niche accounts via Google first, then get their followers
-    # Use hashtag search approach
-    search_url = "https://google-search74.p.rapidapi.com/"
-    search_headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "google-search74.p.rapidapi.com",
-        "Content-Type": "application/json"
-    }
-    query = f"{niche} {city} site:instagram.com".strip()
-    params = {"query": query, "limit": str(max_items), "related_keywords": "true"}
-    
-    async with httpx.AsyncClient(timeout=30) as client:
-        res = await client.get(search_url, headers=search_headers, params=params)
-        data = res.json()
-    
-    results = data.get("results", [])
-    leads = []
-    for i, item in enumerate(results[:max_items]):
-        url_val = item.get("url") or ""
-        title = item.get("title") or ""
-        desc = item.get("description") or ""
-        
-        # Extract Instagram username from URL
-        username = ""
-        if "instagram.com/" in url_val:
-            parts = url_val.split("instagram.com/")
-            if len(parts) > 1:
-                username = parts[1].split("/")[0].split("?")[0]
-        
-        leads.append({
-            "id": i+1,
-            "name": title.replace(" • Instagram", "").replace(" (@", "").split(")")[0] or username or "—",
-            "handle": f"@{username}" if username else "—",
-            "instaLink": f"https://instagram.com/{username}" if username else url_val,
-            "linkedinLink": None,
-            "email": extract_email(desc),
-            "phone": extract_phone(desc),
-            "followers": "—",
-            "niche": niche,
-            "source": "Instagram",
-            "score": 55 if username else 35,
-            "platform": "instagram"
-        })
-    return leads
+  /* LEADS SECTION */
+  .leads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .leads-header h3 { font-size: 16px; font-weight: 700; }
+  .leads-actions { display: flex; gap: 8px; }
+  .btn-outline { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #2a2a4a; background: transparent; color: #888; transition: all 0.2s; }
+  .btn-outline:hover { border-color: #7c3aed; color: #7c3aed; }
+  .btn-purple { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #7c3aed; color: #fff; }
+  .btn-red { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #dc2626; color: #fff; }
 
-async def search_linkedin(niche, city, max_items):
-    # Search LinkedIn via Google
-    url = "https://google-search74.p.rapidapi.com/"
-    headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "google-search74.p.rapidapi.com",
-        "Content-Type": "application/json"
-    }
-    query = f"{niche} {city} site:linkedin.com/company".strip()
-    params = {"query": query, "limit": str(max_items), "related_keywords": "true"}
-    
-    async with httpx.AsyncClient(timeout=30) as client:
-        res = await client.get(url, headers=headers, params=params)
-        data = res.json()
-    
-    results = data.get("results", [])
-    leads = []
-    for i, item in enumerate(results[:max_items]):
-        url_val = item.get("url") or ""
-        desc = item.get("description") or ""
-        leads.append({
-            "id": i+1,
-            "name": item.get("title") or "—",
-            "handle": "—",
-            "instaLink": None,
-            "linkedinLink": url_val if "linkedin.com" in url_val else None,
-            "email": extract_email(desc),
-            "phone": extract_phone(desc),
-            "followers": "—",
-            "niche": niche,
-            "source": "LinkedIn",
-            "score": 60,
-            "platform": "linkedin"
-        })
-    return leads
+  /* LEADS TABLE */
+  .leads-table { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; overflow: hidden; }
+  .table-head { display: grid; grid-template-columns: 36px 2fr 1.5fr 1.2fr 1fr 1fr 80px; gap: 0; background: #111126; border-bottom: 1px solid #2a2a4a; }
+  .th { padding: 12px 14px; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .lead-row { display: grid; grid-template-columns: 36px 2fr 1.5fr 1.2fr 1fr 1fr 80px; border-bottom: 1px solid #1a1a2e; transition: background 0.15s; cursor: pointer; }
+  .lead-row:hover { background: #1e1b4b22; }
+  .lead-row.selected { background: #1e1b4b; }
+  .lead-row:last-child { border-bottom: none; }
+  .td { padding: 13px 14px; font-size: 13px; display: flex; align-items: center; }
+  .td.name-cell { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .td .lead-name { font-weight: 600; color: #fff; font-size: 13px; }
+  .td .lead-handle { font-size: 11px; color: #666; }
+  .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .source-google { background: #1e3a5f; color: #60a5fa; }
+  .source-instagram { background: #3b1f3b; color: #f472b6; }
+  .source-linkedin { background: #1a2e3b; color: #38bdf8; }
+  .email-text { color: #22c55e; font-size: 12px; }
+  .no-email { color: #444; font-size: 12px; }
+  .phone-text { color: #e0e0f0; font-size: 12px; }
+  .score { font-weight: 700; font-size: 13px; }
+  .score.high { color: #22c55e; }
+  .score.low { color: #ef4444; }
+  .links { display: flex; gap: 6px; }
+  .link-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+  .link-insta { background: #3b1f3b; color: #f472b6; }
+  .link-linkedin { background: #1a2e3b; color: #38bdf8; }
 
-@app.post("/api/search")
-async def search_leads(req: SearchRequest):
-    try:
-        if req.platform == "instagram":
-            leads = await search_instagram(req.niche, req.city, req.maxItems)
-        elif req.platform == "linkedin":
-            leads = await search_linkedin(req.niche, req.city, req.maxItems)
-        else:
-            leads = await search_google(req.niche, req.city, req.maxItems)
-        return {"leads": leads, "total": len(leads)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 60px 20px; color: #444; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+  /* EXPORT */
+  .export-bar { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 20px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .export-bar span { font-size: 13px; color: #888; }
+  .btn-export { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: #16a34a; color: #fff; }
 
-@app.get("/", response_class=HTMLResponse)
-def frontend():
-    html_path = pathlib.Path(__file__).parent / "index.html"
-    return html_path.read_text()
+  /* CHECKBOX */
+  input[type=checkbox] { width: 15px; height: 15px; accent-color: #7c3aed; cursor: pointer; }
+
+  @media (max-width: 768px) {
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .platform-row { grid-template-columns: 1fr; }
+    .table-head, .lead-row { grid-template-columns: 36px 1fr 1fr 80px; }
+    .td:nth-child(4), .td:nth-child(5), .th:nth-child(4), .th:nth-child(5) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="icon">⚡</div>
+    <div>
+      <h1>SBWorkflow Lead Engine</h1>
+      <p>Real Leads · Cold Outreach</p>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('search')">🔍 Search</button>
+    <button class="nav-tab" onclick="showTab('leads')">📋 Leads (<span id="lead-count">0</span>)</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SEARCH TAB -->
+  <div id="tab-search">
+    <div class="search-card">
+      <h2>Lead Search</h2>
+      <p>Real businesses — name, email, phone, social links</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Type / Niche</label>
+          <select id="niche-select" onchange="handleNicheSelect(this.value)">
+            <option value="">-- Select Niche --</option>
+            <option value="restaurant">🍽️ Restaurant</option>
+            <option value="salon">💇 Salon / Beauty</option>
+            <option value="gym">🏋️ Gym / Fitness</option>
+            <option value="real estate">🏠 Real Estate</option>
+            <option value="coaching">📚 Coaching / Education</option>
+            <option value="clothing brand">👗 Clothing Brand</option>
+            <option value="digital marketing agency">📱 Digital Marketing Agency</option>
+            <option value="hotel">🏨 Hotel</option>
+            <option value="hospital clinic">🏥 Hospital / Clinic</option>
+            <option value="ecommerce">🛒 E-commerce</option>
+            <option value="custom">✏️ Custom (type below)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Country / City</label>
+          <select id="city-select" onchange="handleCitySelect(this.value)">
+            <option value="">-- Select Country --</option>
+            <option value="India">🇮🇳 India</option>
+            <option value="Mumbai India">🏙️ Mumbai</option>
+            <option value="Delhi India">🏙️ Delhi</option>
+            <option value="Bangalore India">🏙️ Bangalore</option>
+            <option value="USA">🇺🇸 USA</option>
+            <option value="UK">🇬🇧 UK</option>
+            <option value="Dubai UAE">🇦🇪 Dubai</option>
+            <option value="Canada">🇨🇦 Canada</option>
+            <option value="Australia">🇦🇺 Australia</option>
+            <option value="custom">✏️ Custom (type below)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Max Leads</label>
+          <input type="number" id="max-leads" value="10" min="1" max="50"/>
+        </div>
+        <button class="btn-search" id="search-btn" onclick="doSearch()">Search</button>
+      </div>
+
+      <!-- Custom inputs -->
+      <div id="custom-inputs" style="display:none; display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div class="form-group" id="custom-niche-wrap" style="display:none;">
+          <label>Custom Niche</label>
+          <input type="text" id="custom-niche" placeholder="e.g. yoga studio"/>
+        </div>
+        <div class="form-group" id="custom-city-wrap" style="display:none;">
+          <label>Custom City/Country</label>
+          <input type="text" id="custom-city" placeholder="e.g. Pune India"/>
+        </div>
+      </div>
+
+      <!-- PLATFORM -->
+      <div class="platform-row">
+        <div class="platform-card active" onclick="selectPlatform('google', this)">
+          <div class="p-title">🔍 Google <span class="badge">FASTEST</span></div>
+          <div class="p-desc">Real business contacts with email & phone</div>
+        </div>
+        <div class="platform-card" onclick="selectPlatform('instagram', this)">
+          <div class="p-title">📸 Instagram</div>
+          <div class="p-desc">Business profiles from hashtag search</div>
+        </div>
+        <div class="platform-card" onclick="selectPlatform('linkedin', this)">
+          <div class="p-title">💼 LinkedIn</div>
+          <div class="p-desc">Company pages & professional contacts</div>
+        </div>
+      </div>
+
+      <!-- LOG -->
+      <div class="log-box" id="log-box">
+        <div class="log-line" id="log-content">Ready...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS TAB -->
+  <div id="tab-leads" style="display:none;">
+    <div class="leads-header">
+      <h3>Leads (<span id="leads-title-count">0</span>) · <span id="selected-count">0</span> selected · <span id="email-count">0</span> with email</h3>
+      <div class="leads-actions">
+        <button class="btn-purple" onclick="selectAllWithEmail()">✓ Select All With Email</button>
+        <button class="btn-red" onclick="clearAll()">Clear All</button>
+      </div>
+    </div>
+
+    <div class="leads-table">
+      <div class="table-head">
+        <div class="th"><input type="checkbox" id="select-all" onchange="toggleAll(this)"/></div>
+        <div class="th">Business / Name</div>
+        <div class="th">Email</div>
+        <div class="th">Phone</div>
+        <div class="th">Links</div>
+        <div class="th">Source</div>
+        <div class="th">Score</div>
+      </div>
+      <div id="leads-body">
+        <div class="empty-state">
+          <div class="icon">🔍</div>
+          <p>Search karo — leads yahan dikhenge</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="export-bar" id="export-bar" style="display:none;">
+      <span id="export-label">0 leads selected</span>
+      <button class="btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let allLeads = [];
+let selectedIds = new Set();
+let currentPlatform = 'google';
+
+function showTab(tab) {
+  document.getElementById('tab-search').style.display = tab === 'search' ? 'block' : 'none';
+  document.getElementById('tab-leads').style.display = tab === 'leads' ? 'block' : 'none';
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'search') || (i === 1 && tab === 'leads'));
+  });
+}
+
+function selectPlatform(p, el) {
+  currentPlatform = p;
+  document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function handleNicheSelect(val) {
+  const wrap = document.getElementById('custom-niche-wrap');
+  wrap.style.display = val === 'custom' ? 'flex' : 'none';
+  document.getElementById('custom-inputs').style.display = 'grid';
+}
+
+function handleCitySelect(val) {
+  const wrap = document.getElementById('custom-city-wrap');
+  wrap.style.display = val === 'custom' ? 'flex' : 'none';
+  document.getElementById('custom-inputs').style.display = 'grid';
+}
+
+function getNiche() {
+  const sel = document.getElementById('niche-select').value;
+  if (sel === 'custom') return document.getElementById('custom-niche').value.trim();
+  return sel;
+}
+
+function getCity() {
+  const sel = document.getElementById('city-select').value;
+  if (sel === 'custom') return document.getElementById('custom-city').value.trim();
+  return sel;
+}
+
+function log(msg, type = '') {
+  const box = document.getElementById('log-box');
+  box.classList.add('show');
+  const el = document.createElement('div');
+  el.className = `log-line ${type}`;
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function doSearch() {
+  const niche = getNiche();
+  const city = getCity();
+  const maxItems = parseInt(document.getElementById('max-leads').value) || 10;
+
+  if (!niche) { alert('Niche/Business type select karo!'); return; }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  btn.textContent = 'Searching...';
+  document.getElementById('log-box').innerHTML = '';
+
+  log(`Search: "${niche}" in ${city || 'Worldwide'} via ${currentPlatform.toUpperCase()}`);
+  log('Backend se call ho rahi hai...');
+
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ niche, city, platform: currentPlatform, maxItems })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.detail || 'Error');
+
+    allLeads = [...allLeads, ...data.leads];
+    log(`✓ Total results: ${data.total}`, 'success');
+    log(`✅ ${data.total} naye leads add hue!`, 'success');
+
+    document.getElementById('lead-count').textContent = allLeads.length;
+    renderLeads();
+    showTab('leads');
+  } catch (e) {
+    log(`✗ Error: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Search';
+  }
+}
+
+function renderLeads() {
+  const body = document.getElementById('leads-body');
+  document.getElementById('leads-title-count').textContent = allLeads.length;
+  document.getElementById('lead-count').textContent = allLeads.length;
+
+  if (allLeads.length === 0) {
+    body.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Search karo — leads yahan dikhenge</p></div>';
+    return;
+  }
+
+  const emailCount = allLeads.filter(l => l.email).length;
+  document.getElementById('email-count').textContent = emailCount;
+  document.getElementById('selected-count').textContent = selectedIds.size;
+
+  body.innerHTML = allLeads.map(lead => {
+    const sel = selectedIds.has(lead.id);
+    const scoreClass = lead.score >= 60 ? 'high' : 'low';
+    const srcClass = `source-${lead.platform}`;
+    const links = [
+      lead.instaLink ? `<a href="${lead.instaLink}" target="_blank" class="link-btn link-insta">IG</a>` : '',
+      lead.linkedinLink ? `<a href="${lead.linkedinLink}" target="_blank" class="link-btn link-linkedin">LI</a>` : ''
+    ].join('');
+
+    return `<div class="lead-row ${sel ? 'selected' : ''}" onclick="toggleSelect(${lead.id})">
+      <div class="td"><input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect(${lead.id})"/></div>
+      <div class="td name-cell">
+        <span class="lead-name">${lead.name}</span>
+        <span class="lead-handle">${lead.handle !== '—' ? lead.handle : ''}</span>
+      </div>
+      <div class="td">${lead.email ? `<span class="email-text">✉ ${lead.email}</span>` : '<span class="no-email">No email</span>'}</div>
+      <div class="td"><span class="phone-text">${lead.phone || '—'}</span></div>
+      <div class="td"><div class="links">${links || '—'}</div></div>
+      <div class="td"><span class="source-badge ${srcClass}">${lead.source}</span></div>
+      <div class="td"><span class="score ${scoreClass}">${lead.score}%</span></div>
+    </div>`;
+  }).join('');
+
+  const exportBar = document.getElementById('export-bar');
+  exportBar.style.display = selectedIds.size > 0 ? 'flex' : 'none';
+  document.getElementById('export-label').textContent = `${selectedIds.size} leads selected`;
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  renderLeads();
+}
+
+function toggleAll(cb) {
+  if (cb.checked) allLeads.forEach(l => selectedIds.add(l.id));
+  else selectedIds.clear();
+  renderLeads();
+}
+
+function selectAllWithEmail() {
+  allLeads.filter(l => l.email).forEach(l => selectedIds.add(l.id));
+  renderLeads();
+}
+
+function clearAll() {
+  allLeads = [];
+  selectedIds.clear();
+  renderLeads();
+}
+
+function exportCSV() {
+  const selected = allLeads.filter(l => selectedIds.has(l.id));
+  if (!selected.length) { alert('Koi lead select nahi hai!'); return; }
+  const headers = ['Name', 'Handle', 'Email', 'Phone', 'Instagram', 'LinkedIn', 'Source', 'Score'];
+  const rows = selected.map(l => [
+    `"${l.name}"`, `"${l.handle}"`, `"${l.email}"`, `"${l.phone}"`,
+    `"${l.instaLink || ''}"`, `"${l.linkedinLink || ''}"`, l.source, l.score + '%'
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'leads.csv'; a.click();
+}
+</script>
+</body>
+</html>
