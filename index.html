@@ -1,467 +1,424 @@
-bash
-
-cat /home/claude/sbworkflow/public/index.html
-Output
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SBWorkflow Lead Engine</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a0a0f;color:#e8e8f0;font-family:'DM Sans','Segoe UI',sans-serif;min-height:100vh}
-  input,select,textarea{outline:none;font-family:inherit}
-  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#111118}::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:3px}
-  .tab-btn{padding:7px 16px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;background:transparent;color:#666680;font-family:inherit}
-  .tab-btn.active{background:#6c63ff;color:#fff}
-  .tab-btn:hover:not(.active){color:#e8e8f0;background:#1e1e2e}
-  .btn{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;transition:all 0.2s}
-  .btn:disabled{opacity:0.45;cursor:not-allowed}
-  .inp{width:100%;padding:10px 12px;background:#16161f;border:1px solid #1e1e2e;border-radius:8px;color:#e8e8f0;font-size:13px;font-family:inherit;transition:border 0.2s}
-  .inp:focus{border-color:#6c63ff}
-  .card{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:16px}
-  .label{font-size:11px;color:#666680;display:block;margin-bottom:6px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
-  .lead-row{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:13px 16px;cursor:pointer;display:grid;grid-template-columns:28px 1.8fr 1.6fr 1fr 1fr 72px;gap:10px;align-items:center;transition:all 0.15s;margin-bottom:8px}
-  .lead-row:hover{border-color:#6c63ff55;background:#13131e}
-  .lead-row.selected{background:#15152a;border-color:#6c63ff}
-  .lead-row.sent{border-color:#00e5a0}
-  .log-line{font-size:12px;margin-bottom:4px;padding:2px 0;line-height:1.5}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #6c63ff44;border-top-color:#6c63ff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px}
-  .platform-card{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.2s}
-  .platform-card:hover,.platform-card.active{border-color:#6c63ff;background:#15152a}
-  .empty-state{text-align:center;padding:60px 20px;color:#666680}
-  .empty-state .icon{font-size:40px;margin-bottom:12px}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: #1a1a2e; border-bottom: 1px solid #2a2a4a; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-logo { display: flex; align-items: center; gap: 12px; }
+  .header-logo .icon { width: 36px; height: 36px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header-logo h1 { font-size: 18px; font-weight: 700; color: #fff; }
+  .header-logo p { font-size: 11px; color: #888; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { padding: 8px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: #888; transition: all 0.2s; }
+  .nav-tab.active { background: #7c3aed; color: #fff; }
+  .nav-tab:hover:not(.active) { background: #2a2a4a; color: #fff; }
+
+  /* MAIN */
+  .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  /* SEARCH CARD */
+  .search-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+  .search-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .search-card p { font-size: 13px; color: #666; margin-bottom: 24px; }
+
+  /* FORM ROW */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 160px auto; gap: 12px; align-items: end; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group select, .form-group input { background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 14px; outline: none; transition: border 0.2s; width: 100%; }
+  .form-group select:focus, .form-group input:focus { border-color: #7c3aed; }
+  .form-group select option { background: #1a1a2e; }
+  .btn-search { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; border: none; border-radius: 10px; padding: 11px 28px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; height: 44px; }
+  .btn-search:hover { opacity: 0.9; }
+  .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* PLATFORM TABS */
+  .platform-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .platform-card { border: 2px solid #2a2a4a; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .platform-card.active { border-color: #7c3aed; background: #1e1b4b; }
+  .platform-card:hover:not(.active) { border-color: #4a4a6a; }
+  .platform-card .p-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .platform-card .p-desc { font-size: 12px; color: #666; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #16a34a; color: #fff; font-weight: 600; }
+
+  /* LIVE LOG */
+  .log-box { background: #0a0a14; border: 1px solid #1a1a2e; border-radius: 10px; padding: 14px 16px; margin-top: 16px; max-height: 120px; overflow-y: auto; display: none; }
+  .log-box.show { display: block; }
+  .log-line { font-size: 12px; color: #666; margin-bottom: 4px; font-family: monospace; }
+  .log-line.success { color: #22c55e; }
+  .log-line.error { color: #ef4444; }
+  .log-line.warn { color: #f59e0b; }
+
+  /* LEADS SECTION */
+  .leads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .leads-header h3 { font-size: 16px; font-weight: 700; }
+  .leads-actions { display: flex; gap: 8px; }
+  .btn-outline { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #2a2a4a; background: transparent; color: #888; transition: all 0.2s; }
+  .btn-outline:hover { border-color: #7c3aed; color: #7c3aed; }
+  .btn-purple { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #7c3aed; color: #fff; }
+  .btn-red { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #dc2626; color: #fff; }
+
+  /* LEADS TABLE */
+  .leads-table { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; overflow: hidden; }
+  .table-head { display: grid; grid-template-columns: 36px 2fr 1.5fr 1.2fr 1fr 1fr 80px; gap: 0; background: #111126; border-bottom: 1px solid #2a2a4a; }
+  .th { padding: 12px 14px; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .lead-row { display: grid; grid-template-columns: 36px 2fr 1.5fr 1.2fr 1fr 1fr 80px; border-bottom: 1px solid #1a1a2e; transition: background 0.15s; cursor: pointer; }
+  .lead-row:hover { background: #1e1b4b22; }
+  .lead-row.selected { background: #1e1b4b; }
+  .lead-row:last-child { border-bottom: none; }
+  .td { padding: 13px 14px; font-size: 13px; display: flex; align-items: center; }
+  .td.name-cell { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .td .lead-name { font-weight: 600; color: #fff; font-size: 13px; }
+  .td .lead-handle { font-size: 11px; color: #666; }
+  .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .source-google { background: #1e3a5f; color: #60a5fa; }
+  .source-instagram { background: #3b1f3b; color: #f472b6; }
+  .source-linkedin { background: #1a2e3b; color: #38bdf8; }
+  .email-text { color: #22c55e; font-size: 12px; }
+  .no-email { color: #444; font-size: 12px; }
+  .phone-text { color: #e0e0f0; font-size: 12px; }
+  .score { font-weight: 700; font-size: 13px; }
+  .score.high { color: #22c55e; }
+  .score.low { color: #ef4444; }
+  .links { display: flex; gap: 6px; }
+  .link-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+  .link-insta { background: #3b1f3b; color: #f472b6; }
+  .link-linkedin { background: #1a2e3b; color: #38bdf8; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 60px 20px; color: #444; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* EXPORT */
+  .export-bar { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 20px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .export-bar span { font-size: 13px; color: #888; }
+  .btn-export { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: #16a34a; color: #fff; }
+
+  /* CHECKBOX */
+  input[type=checkbox] { width: 15px; height: 15px; accent-color: #7c3aed; cursor: pointer; }
+
+  @media (max-width: 768px) {
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .platform-row { grid-template-columns: 1fr; }
+    .table-head, .lead-row { grid-template-columns: 36px 1fr 1fr 80px; }
+    .td:nth-child(4), .td:nth-child(5), .th:nth-child(4), .th:nth-child(5) { display: none; }
+  }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div style="border-bottom:1px solid #1e1e2e;padding:14px 28px;display:flex;align-items:center;gap:16px;background:#111118;position:sticky;top:0;z-index:100">
-  <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6c63ff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:17px">⚡</div>
-  <div>
-    <div style="font-weight:700;font-size:15px">SBWorkflow Lead Engine</div>
-    <div style="font-size:11px;color:#666680">Real Leads · Cold Outreach · klyperixproduction@gmail.com</div>
+<div class="header">
+  <div class="header-logo">
+    <div class="icon">⚡</div>
+    <div>
+      <h1>SBWorkflow Lead Engine</h1>
+      <p>Real Leads · Cold Outreach</p>
+    </div>
   </div>
-  <div style="margin-left:auto;display:flex;gap:6px">
-    <button class="tab-btn active" onclick="switchTab('search')" id="tab-search">🔍 Search</button>
-    <button class="tab-btn" onclick="switchTab('leads')" id="tab-leads">📋 Leads (<span id="lead-count">0</span>)</button>
-    <button class="tab-btn" onclick="switchTab('email')" id="tab-email">✉️ Outreach</button>
-    <button class="tab-btn" onclick="switchTab('setup')" id="tab-setup">⚙️ Setup</button>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('search')">🔍 Search</button>
+    <button class="nav-tab" onclick="showTab('leads')">📋 Leads (<span id="lead-count">0</span>)</button>
   </div>
 </div>
 
-<div style="padding:28px;max-width:1100px;margin:0 auto">
+<div class="main">
 
-<!-- ══ SEARCH TAB ══ -->
-<div id="pane-search">
-  <h2 style="margin-bottom:4px;font-size:22px">Lead Search</h2>
-  <p style="color:#666680;font-size:13px;margin-bottom:24px">Backend se Apify call hoti hai — CORS issue nahi, real data milta hai</p>
+  <!-- SEARCH TAB -->
+  <div id="tab-search">
+    <div class="search-card">
+      <h2>Lead Search</h2>
+      <p>Real businesses — name, email, phone, social links</p>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr 120px auto;gap:12px;margin-bottom:20px;align-items:end">
-    <div>
-      <label class="label">Niche / Business Type</label>
-      <input class="inp" id="inp-niche" placeholder="restaurant, salon, real estate...">
-    </div>
-    <div>
-      <label class="label">City (Optional)</label>
-      <input class="inp" id="inp-city" placeholder="Mumbai, Dubai, London...">
-    </div>
-    <div>
-      <label class="label">Max Leads</label>
-      <input class="inp" id="inp-max" value="10" type="number" min="1" max="30">
-    </div>
-    <button class="btn" id="search-btn" onclick="handleSearch()" style="background:#6c63ff;color:#fff;padding:10px 24px;font-size:14px">
-      Search
-    </button>
-  </div>
-
-  <!-- Platform selector -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-    <div class="platform-card active" id="plat-google" onclick="selectPlatform('google')">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span>🔍</span><span style="font-weight:700;font-size:13px;color:#00e5a0">Google</span>
-        <span style="font-size:10px;background:#00e5a033;color:#00e5a0;padding:2px 7px;border-radius:20px;font-weight:700">FASTEST</span>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Type / Niche</label>
+          <select id="niche-select" onchange="handleNicheSelect(this.value)">
+            <option value="">-- Select Niche --</option>
+            <option value="restaurant">🍽️ Restaurant</option>
+            <option value="salon">💇 Salon / Beauty</option>
+            <option value="gym">🏋️ Gym / Fitness</option>
+            <option value="real estate">🏠 Real Estate</option>
+            <option value="coaching">📚 Coaching / Education</option>
+            <option value="clothing brand">👗 Clothing Brand</option>
+            <option value="digital marketing agency">📱 Digital Marketing Agency</option>
+            <option value="hotel">🏨 Hotel</option>
+            <option value="hospital clinic">🏥 Hospital / Clinic</option>
+            <option value="ecommerce">🛒 E-commerce</option>
+            <option value="custom">✏️ Custom (type below)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Country / City</label>
+          <select id="city-select" onchange="handleCitySelect(this.value)">
+            <option value="">-- Select Country --</option>
+            <option value="India">🇮🇳 India</option>
+            <option value="Mumbai India">🏙️ Mumbai</option>
+            <option value="Delhi India">🏙️ Delhi</option>
+            <option value="Bangalore India">🏙️ Bangalore</option>
+            <option value="USA">🇺🇸 USA</option>
+            <option value="UK">🇬🇧 UK</option>
+            <option value="Dubai UAE">🇦🇪 Dubai</option>
+            <option value="Canada">🇨🇦 Canada</option>
+            <option value="Australia">🇦🇺 Australia</option>
+            <option value="custom">✏️ Custom (type below)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Max Leads</label>
+          <input type="number" id="max-leads" value="10" min="1" max="50"/>
+        </div>
+        <button class="btn-search" id="search-btn" onclick="doSearch()">Search</button>
       </div>
-      <p style="font-size:12px;color:#666680">15-40 sec. Instagram + LinkedIn dono ke results ek saath.</p>
-    </div>
-    <div class="platform-card" id="plat-instagram" onclick="selectPlatform('instagram')">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span>📸</span><span style="font-weight:700;font-size:13px;color:#E1306C">Instagram</span>
+
+      <!-- Custom inputs -->
+      <div id="custom-inputs" style="display:none; display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div class="form-group" id="custom-niche-wrap" style="display:none;">
+          <label>Custom Niche</label>
+          <input type="text" id="custom-niche" placeholder="e.g. yoga studio"/>
+        </div>
+        <div class="form-group" id="custom-city-wrap" style="display:none;">
+          <label>Custom City/Country</label>
+          <input type="text" id="custom-city" placeholder="e.g. Pune India"/>
+        </div>
       </div>
-      <p style="font-size:12px;color:#666680">Hashtag se real profiles. Bio mein email/phone milti hai.</p>
-    </div>
-    <div class="platform-card" id="plat-linkedin" onclick="selectPlatform('linkedin')">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span>💼</span><span style="font-weight:700;font-size:13px;color:#0077B5">LinkedIn</span>
+
+      <!-- PLATFORM -->
+      <div class="platform-row">
+        <div class="platform-card active" onclick="selectPlatform('google', this)">
+          <div class="p-title">🔍 Google <span class="badge">FASTEST</span></div>
+          <div class="p-desc">Real business contacts with email & phone</div>
+        </div>
+        <div class="platform-card" onclick="selectPlatform('instagram', this)">
+          <div class="p-title">📸 Instagram</div>
+          <div class="p-desc">Business profiles from hashtag search</div>
+        </div>
+        <div class="platform-card" onclick="selectPlatform('linkedin', this)">
+          <div class="p-title">💼 LinkedIn</div>
+          <div class="p-desc">Company pages & professional contacts</div>
+        </div>
       </div>
-      <p style="font-size:12px;color:#666680">Company pages. Professional emails. B2B ke liye best.</p>
-    </div>
-  </div>
 
-  <!-- Log -->
-  <div id="log-box" style="display:none;background:#0d0d14;border:1px solid #1e1e2e;border-radius:10px;padding:14px 16px;max-height:220px;overflow-y:auto">
-    <div style="font-size:11px;color:#666680;margin-bottom:8px;font-weight:700;letter-spacing:0.06em">⚡ LIVE LOG</div>
-    <div id="log-lines"></div>
-  </div>
-</div>
-
-<!-- ══ LEADS TAB ══ -->
-<div id="pane-leads" style="display:none">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <div>
-      <h2 style="margin-bottom:4px;font-size:22px">Leads (<span id="leads-h-count">0</span>)</h2>
-      <p style="color:#666680;font-size:12px" id="leads-subtitle">0 selected · 0 with email</p>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn" onclick="selectAllWithEmail()" style="background:#6c63ff;color:#fff;font-size:12px">✓ Select All With Email</button>
-      <button class="btn" onclick="clearAllLeads()" style="background:#ff4f6a22;color:#ff4f6a;border:1px solid #ff4f6a44;font-size:12px">Clear All</button>
-    </div>
-  </div>
-  <div id="leads-list">
-    <div class="empty-state"><div class="icon">🎯</div><p>Search tab mein niche daal ke leads search karo</p></div>
-  </div>
-</div>
-
-<!-- ══ EMAIL TAB ══ -->
-<div id="pane-email" style="display:none">
-  <h2 style="margin-bottom:4px;font-size:22px">Cold Email Outreach</h2>
-  <p style="color:#666680;font-size:13px;margin-bottom:20px">Variables: <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{name}</code> <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{niche}</code> <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{handle}</code></p>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div>
-      <label class="label">Email Template</label>
-      <textarea class="inp" id="email-template" rows="14" style="resize:vertical">Subject: Partnership Opportunity
-
-Hi {name},
-
-I came across your profile and believe we can help grow your business significantly.
-
-We specialize in helping businesses like yours get more clients and increase revenue through strategic marketing.
-
-Would you be open to a quick 15-minute call this week?
-
-Best regards,
-SBWorkflow Team</textarea>
-      <button class="btn" id="send-btn" onclick="sendEmails()" style="background:#00e5a0;color:#000;font-weight:700;width:100%;margin-top:12px;padding:12px;font-size:14px">
-        ✉️ Send Emails
-      </button>
-    </div>
-    <div>
-      <div class="card">
-        <div style="font-weight:700;margin-bottom:12px;font-size:13px;color:#666680;letter-spacing:0.04em">SELECTED LEADS</div>
-        <div id="email-preview"><p style="color:#666680;font-size:12px">Leads tab mein leads select karo</p></div>
+      <!-- LOG -->
+      <div class="log-box" id="log-box">
+        <div class="log-line" id="log-content">Ready...</div>
       </div>
-      <div class="card" style="margin-top:12px;background:#0d1a12;border-color:#00e5a033">
-        <div style="font-size:12px;color:#00e5a0;font-weight:700;margin-bottom:8px">✓ Spam Se Bachne Ke Tips</div>
-        <div style="font-size:12px;color:#666680;line-height:1.7">
-          • Har email ke beech 2.5 sec delay hai<br>
-          • Personal message likho, generic nahi<br>
-          • EmailJS se aapka Gmail use hoga<br>
-          • Din mein 50 se zyada mat bhejo
+    </div>
+  </div>
+
+  <!-- LEADS TAB -->
+  <div id="tab-leads" style="display:none;">
+    <div class="leads-header">
+      <h3>Leads (<span id="leads-title-count">0</span>) · <span id="selected-count">0</span> selected · <span id="email-count">0</span> with email</h3>
+      <div class="leads-actions">
+        <button class="btn-purple" onclick="selectAllWithEmail()">✓ Select All With Email</button>
+        <button class="btn-red" onclick="clearAll()">Clear All</button>
+      </div>
+    </div>
+
+    <div class="leads-table">
+      <div class="table-head">
+        <div class="th"><input type="checkbox" id="select-all" onchange="toggleAll(this)"/></div>
+        <div class="th">Business / Name</div>
+        <div class="th">Email</div>
+        <div class="th">Phone</div>
+        <div class="th">Links</div>
+        <div class="th">Source</div>
+        <div class="th">Score</div>
+      </div>
+      <div id="leads-body">
+        <div class="empty-state">
+          <div class="icon">🔍</div>
+          <p>Search karo — leads yahan dikhenge</p>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ══ SETUP TAB ══ -->
-<div id="pane-setup" style="display:none">
-  <h2 style="margin-bottom:6px;font-size:22px">Setup</h2>
-  <p style="color:#666680;font-size:13px;margin-bottom:24px">EmailJS se Gmail connect karo — emails direct inbox mein jayenge</p>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div class="card">
-      <div style="font-weight:700;margin-bottom:16px;font-size:13px">EmailJS Configuration</div>
-      <div style="margin-bottom:14px">
-        <label class="label">Service ID</label>
-        <input class="inp" id="ejs-service" placeholder="service_xxxxxxx">
-      </div>
-      <div style="margin-bottom:14px">
-        <label class="label">Template ID</label>
-        <input class="inp" id="ejs-template-id" placeholder="template_xxxxxxx">
-      </div>
-      <div style="margin-bottom:16px">
-        <label class="label">Public Key</label>
-        <input class="inp" id="ejs-pubkey" placeholder="xxxxxxxxxxxxxx">
-      </div>
-      <button class="btn" onclick="saveEjs()" style="background:#6c63ff;color:#fff;width:100%">Save Config</button>
-      <div style="font-size:12px;color:#666680;margin-top:12px;line-height:1.7">
-        1. emailjs.com pe free account banao<br>
-        2. Gmail service connect karo → Service ID milega<br>
-        3. Template banao → Template ID milega<br>
-        4. Account → General → Public Key copy karo
-      </div>
-    </div>
-
-    <div>
-      <div class="card" style="margin-bottom:12px">
-        <div style="font-weight:700;margin-bottom:12px;font-size:13px">Apify Status</div>
-        <div style="font-size:13px;color:#00e5a0;margin-bottom:4px">✓ Token Connected</div>
-        <div style="font-size:12px;color:#666680;background:#0d0d14;padding:8px 10px;border-radius:6px;margin-top:8px;word-break:break-all">apify_api_KL...4uWqgQ</div>
-        <a href="https://console.apify.com/billing" target="_blank" style="font-size:12px;color:#6c63ff;display:block;margin-top:10px">→ Apify Usage Check karo</a>
-      </div>
-
-      <div class="card" style="background:#1a0d0d;border-color:#ff4f6a33">
-        <div style="font-weight:700;margin-bottom:10px;font-size:13px;color:#ff4f6a">⚠️ Deploy Karna Hai?</div>
-        <div style="font-size:12px;color:#666680;line-height:1.8">
-          Is tool ko properly chalane ke liye Railway pe deploy karo.<br><br>
-          <strong style="color:#e8e8f0">railway.app</strong> → New Project → Deploy from GitHub<br><br>
-          Environment variable add karo:<br>
-          <code style="background:#0d0d14;padding:3px 8px;border-radius:4px;color:#00e5a0">APIFY_TOKEN=apify_api_KL...WqgQ</code>
-        </div>
-      </div>
+    <div class="export-bar" id="export-bar" style="display:none;">
+      <span id="export-label">0 leads selected</span>
+      <button class="btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
     </div>
   </div>
-</div>
 
-</div><!-- end container -->
+</div>
 
 <script>
-// ════════════════════════════════════
-// CONFIG — deployed URL yahan daalo
-// ════════════════════════════════════
-// Jab Railway pe deploy ho jaaye toh ye URL update karo:
-// const API_BASE = "https://your-project.railway.app";
-// Local test ke liye:
-const API_BASE = window.location.origin; // same server se chalega
+let allLeads = [];
+let selectedIds = new Set();
+let currentPlatform = 'google';
 
-// ════════════════════════════════════
-// STATE
-// ════════════════════════════════════
-let leads = [];
-let selected = new Set();
-let emailSentIds = new Set();
-let currentPlatform = "google";
-let isLoading = false;
-let ejsConfig = { serviceId: "", templateId: "", publicKey: "" };
-
-// ════════════════════════════════════
-// TABS
-// ════════════════════════════════════
-function switchTab(tab) {
-  ['search','leads','email','setup'].forEach(t => {
-    document.getElementById('pane-'+t).style.display = t===tab?'block':'none';
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+function showTab(tab) {
+  document.getElementById('tab-search').style.display = tab === 'search' ? 'block' : 'none';
+  document.getElementById('tab-leads').style.display = tab === 'leads' ? 'block' : 'none';
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'search') || (i === 1 && tab === 'leads'));
   });
-  if(tab==='email') updateEmailPreview();
-  if(tab==='leads') renderLeads();
 }
 
-// ════════════════════════════════════
-// PLATFORM
-// ════════════════════════════════════
-function selectPlatform(p) {
+function selectPlatform(p, el) {
   currentPlatform = p;
-  ['google','instagram','linkedin'].forEach(pl => {
-    document.getElementById('plat-'+pl).classList.toggle('active', pl===p);
-  });
+  document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
 }
 
-// ════════════════════════════════════
-// LOG
-// ════════════════════════════════════
-function addLog(msg, type='info') {
+function handleNicheSelect(val) {
+  const wrap = document.getElementById('custom-niche-wrap');
+  wrap.style.display = val === 'custom' ? 'flex' : 'none';
+  document.getElementById('custom-inputs').style.display = 'grid';
+}
+
+function handleCitySelect(val) {
+  const wrap = document.getElementById('custom-city-wrap');
+  wrap.style.display = val === 'custom' ? 'flex' : 'none';
+  document.getElementById('custom-inputs').style.display = 'grid';
+}
+
+function getNiche() {
+  const sel = document.getElementById('niche-select').value;
+  if (sel === 'custom') return document.getElementById('custom-niche').value.trim();
+  return sel;
+}
+
+function getCity() {
+  const sel = document.getElementById('city-select').value;
+  if (sel === 'custom') return document.getElementById('custom-city').value.trim();
+  return sel;
+}
+
+function log(msg, type = '') {
   const box = document.getElementById('log-box');
-  const lines = document.getElementById('log-lines');
-  box.style.display = 'block';
-  const colors = {info:'#8888aa', success:'#00e5a0', error:'#ff4f6a', warn:'#f5c542'};
-  const icons = {info:'›', success:'✓', error:'✗', warn:'⚠'};
-  const t = new Date().toLocaleTimeString();
-  const div = document.createElement('div');
-  div.className = 'log-line';
-  div.style.color = colors[type]||'#8888aa';
-  div.innerHTML = `<span style="opacity:0.4">[${t}]</span> ${icons[type]||'›'} ${msg}`;
-  lines.appendChild(div);
+  box.classList.add('show');
+  const el = document.createElement('div');
+  el.className = `log-line ${type}`;
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.appendChild(el);
   box.scrollTop = box.scrollHeight;
 }
-function clearLog() { document.getElementById('log-lines').innerHTML=''; }
 
-// ════════════════════════════════════
-// SEARCH
-// ════════════════════════════════════
-async function handleSearch() {
-  if(isLoading) return;
-  const niche = document.getElementById('inp-niche').value.trim();
-  const city = document.getElementById('inp-city').value.trim();
-  const maxItems = parseInt(document.getElementById('inp-max').value)||10;
+async function doSearch() {
+  const niche = getNiche();
+  const city = getCity();
+  const maxItems = parseInt(document.getElementById('max-leads').value) || 10;
 
-  if(!niche){alert('Niche zaroor daalo — e.g. restaurant, salon, gym');return;}
+  if (!niche) { alert('Niche/Business type select karo!'); return; }
 
-  isLoading = true;
-  clearLog();
   const btn = document.getElementById('search-btn');
-  btn.innerHTML = '<span class="spinner"></span>Searching...';
   btn.disabled = true;
+  btn.textContent = 'Searching...';
+  document.getElementById('log-box').innerHTML = '';
 
-  addLog(`Search: "${niche}" ${city?'in '+city:''} via ${currentPlatform.toUpperCase()}`);
-  addLog('Backend se Apify call ho rahi hai...');
+  log(`Search: "${niche}" in ${city || 'Worldwide'} via ${currentPlatform.toUpperCase()}`);
+  log('Backend se call ho rahi hai...');
 
   try {
-    const res = await fetch(`${API_BASE}/api/search`, {
+    const res = await fetch('/api/search', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ niche, city, platform: currentPlatform, maxItems })
     });
-
-    if(!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Server error: '+res.status);
-    }
-
     const data = await res.json();
-    addLog(`Total results: ${data.total}`, data.total>0?'success':'warn');
 
-    if(data.total === 0) {
-      addLog('Koi lead nahi mila. Niche ya city change karo, ya Google platform try karo.', 'warn');
-    } else {
-      const existingKeys = new Set(leads.map(l=>l.handle+l.name));
-      const fresh = data.leads.filter(l=>!existingKeys.has(l.handle+l.name));
-      leads = [...leads, ...fresh.map((l,i)=>({...l, id: Date.now()+i}))];
-      updateLeadCount();
-      addLog(`✅ ${fresh.length} naye leads add hue!`, 'success');
-      setTimeout(()=>switchTab('leads'), 1200);
-    }
-  } catch(err) {
-    addLog('Error: '+err.message, 'error');
-    if(err.message.includes('fetch')) {
-      addLog('⚠️ Backend nahi mila — Railway pe deploy karo (Setup tab dekho)', 'warn');
-    }
+    if (!res.ok) throw new Error(data.detail || 'Error');
+
+    allLeads = [...allLeads, ...data.leads];
+    log(`✓ Total results: ${data.total}`, 'success');
+    log(`✅ ${data.total} naye leads add hue!`, 'success');
+
+    document.getElementById('lead-count').textContent = allLeads.length;
+    renderLeads();
+    showTab('leads');
+  } catch (e) {
+    log(`✗ Error: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Search';
   }
-
-  isLoading = false;
-  btn.innerHTML = 'Search';
-  btn.disabled = false;
-}
-
-// ════════════════════════════════════
-// LEADS
-// ════════════════════════════════════
-function updateLeadCount() {
-  document.getElementById('lead-count').textContent = leads.length;
-  document.getElementById('leads-h-count').textContent = leads.length;
-  const withEmail = leads.filter(l=>l.email).length;
-  document.getElementById('leads-subtitle').textContent =
-    `${selected.size} selected · ${withEmail} with email`;
 }
 
 function renderLeads() {
-  updateLeadCount();
-  const container = document.getElementById('leads-list');
-  if(leads.length===0){
-    container.innerHTML=`<div class="empty-state"><div class="icon">🎯</div><p>Search tab mein niche daal ke leads search karo</p></div>`;
+  const body = document.getElementById('leads-body');
+  document.getElementById('leads-title-count').textContent = allLeads.length;
+  document.getElementById('lead-count').textContent = allLeads.length;
+
+  if (allLeads.length === 0) {
+    body.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Search karo — leads yahan dikhenge</p></div>';
     return;
   }
-  container.innerHTML = leads.map(lead=>{
-    const isSel = selected.has(lead.id);
-    const isSent = emailSentIds.has(lead.id);
-    const scoreColor = lead.score>=70?'#00e5a0':lead.score>=50?'#f5c542':'#ff4f6a';
-    const link = lead.instaLink||lead.linkedinLink||'#';
-    const srcColor = {Instagram:'#E1306C',LinkedIn:'#0077B5',Google:'#4285F4'}[lead.source]||'#666680';
-    return `<div class="lead-row${isSel?' selected':''}${isSent?' sent':''}" onclick="toggleLead(${lead.id})">
-      <input type="checkbox" ${isSel?'checked':''} onclick="event.stopPropagation();toggleLead(${lead.id})" style="cursor:pointer;accent-color:#6c63ff;width:16px;height:16px">
-      <div>
-        <div style="font-weight:600;font-size:13px;margin-bottom:2px">${lead.name}</div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${lead.handle!=='—'?`<a href="${link}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:${srcColor};text-decoration:none">${lead.handle}</a>`:''}
-          <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#1e1e2e;color:${srcColor}">${lead.source}</span>
-        </div>
+
+  const emailCount = allLeads.filter(l => l.email).length;
+  document.getElementById('email-count').textContent = emailCount;
+  document.getElementById('selected-count').textContent = selectedIds.size;
+
+  body.innerHTML = allLeads.map(lead => {
+    const sel = selectedIds.has(lead.id);
+    const scoreClass = lead.score >= 60 ? 'high' : 'low';
+    const srcClass = `source-${lead.platform}`;
+    const links = [
+      lead.instaLink ? `<a href="${lead.instaLink}" target="_blank" class="link-btn link-insta">IG</a>` : '',
+      lead.linkedinLink ? `<a href="${lead.linkedinLink}" target="_blank" class="link-btn link-linkedin">LI</a>` : ''
+    ].join('');
+
+    return `<div class="lead-row ${sel ? 'selected' : ''}" onclick="toggleSelect(${lead.id})">
+      <div class="td"><input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect(${lead.id})"/></div>
+      <div class="td name-cell">
+        <span class="lead-name">${lead.name}</span>
+        <span class="lead-handle">${lead.handle !== '—' ? lead.handle : ''}</span>
       </div>
-      <div style="font-size:12px;color:${lead.email?'#00e5a0':'#444460'}">${lead.email||'No email'}</div>
-      <div style="font-size:12px;color:${lead.phone?'#e8e8f0':'#444460'}">${lead.phone||'—'}</div>
-      <div style="font-size:12px;color:#666680">👥 ${lead.followers}<br><span style="font-size:11px">${lead.niche}</span></div>
-      <div style="text-align:right">
-        <span style="font-size:13px;font-weight:700;color:${scoreColor}">${lead.score}%</span>
-        ${isSent?'<div style="font-size:10px;color:#00e5a0;margin-top:2px">✓ Sent</div>':''}
-      </div>
+      <div class="td">${lead.email ? `<span class="email-text">✉ ${lead.email}</span>` : '<span class="no-email">No email</span>'}</div>
+      <div class="td"><span class="phone-text">${lead.phone || '—'}</span></div>
+      <div class="td"><div class="links">${links || '—'}</div></div>
+      <div class="td"><span class="source-badge ${srcClass}">${lead.source}</span></div>
+      <div class="td"><span class="score ${scoreClass}">${lead.score}%</span></div>
     </div>`;
   }).join('');
+
+  const exportBar = document.getElementById('export-bar');
+  exportBar.style.display = selectedIds.size > 0 ? 'flex' : 'none';
+  document.getElementById('export-label').textContent = `${selectedIds.size} leads selected`;
 }
 
-function toggleLead(id) {
-  if(selected.has(id)) selected.delete(id);
-  else selected.add(id);
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
   renderLeads();
-  updateEmailPreview();
+}
+
+function toggleAll(cb) {
+  if (cb.checked) allLeads.forEach(l => selectedIds.add(l.id));
+  else selectedIds.clear();
+  renderLeads();
 }
 
 function selectAllWithEmail() {
-  leads.filter(l=>l.email).forEach(l=>selected.add(l.id));
-  renderLeads(); updateEmailPreview();
-}
-
-function clearAllLeads() {
-  if(!confirm('Saare leads delete karein?')) return;
-  leads=[]; selected.clear(); emailSentIds.clear();
-  renderLeads(); updateLeadCount();
-}
-
-// ════════════════════════════════════
-// EMAIL
-// ════════════════════════════════════
-function updateEmailPreview() {
-  const selLeads = leads.filter(l=>selected.has(l.id));
-  const withEmail = selLeads.filter(l=>l.email).length;
-  document.getElementById('send-btn').textContent = `✉️ Send to ${withEmail} leads`;
-  const container = document.getElementById('email-preview');
-  if(!selLeads.length){
-    container.innerHTML='<p style="color:#666680;font-size:12px">Leads tab mein leads select karo</p>';
-    return;
-  }
-  container.innerHTML = selLeads.map(l=>`
-    <div style="font-size:12px;padding:8px 0;border-bottom:1px solid #1e1e2e;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-weight:600">${l.name}</span>
-      <span style="color:${l.email?'#00e5a0':'#ff4f6a'};font-size:11px">${l.email||'No email'}</span>
-    </div>
-  `).join('');
-}
-
-function saveEjs() {
-  ejsConfig.serviceId = document.getElementById('ejs-service').value.trim();
-  ejsConfig.templateId = document.getElementById('ejs-template-id').value.trim();
-  ejsConfig.publicKey = document.getElementById('ejs-pubkey').value.trim();
-  alert('✅ EmailJS config saved!');
-}
-
-async function sendEmails() {
-  const targets = leads.filter(l=>selected.has(l.id)&&l.email);
-  if(!targets.length){alert('Koi selected lead ke paas email nahi hai.');return;}
-  if(!ejsConfig.serviceId||!ejsConfig.templateId||!ejsConfig.publicKey){
-    alert('Pehle Setup tab mein EmailJS config karo aur Save karo.');return;
-  }
-  const btn = document.getElementById('send-btn');
-  btn.innerHTML='<span class="spinner"></span>Sending...';
-  btn.disabled=true;
-
-  emailjs.init(ejsConfig.publicKey);
-  let ok=0,fail=0;
-  const template = document.getElementById('email-template').value;
-
-  for(const lead of targets){
-    try{
-      const lines = template.split('\n');
-      const subject = lines[0].replace(/^Subject:\s*/i,'').trim();
-      const body = lines.slice(2).join('\n').trim()
-        .replace(/{name}/g,lead.name)
-        .replace(/{niche}/g,lead.niche)
-        .replace(/{handle}/g,lead.handle);
-      await emailjs.send(ejsConfig.serviceId,ejsConfig.templateId,{
-        to_email:lead.email,from_name:'SBWorkflow',subject,message:body
-      });
-      emailSentIds.add(lead.id);
-      ok++;
-      await new Promise(r=>setTimeout(r,2500));
-    }catch(e){fail++;}
-  }
-
-  btn.textContent='✉️ Send Emails';
-  btn.disabled=false;
+  allLeads.filter(l => l.email).forEach(l => selectedIds.add(l.id));
   renderLeads();
-  alert(`✅ ${ok} emails bheje.\n${fail?`❌ ${fail} fail.`:''}`);
+}
+
+function clearAll() {
+  allLeads = [];
+  selectedIds.clear();
+  renderLeads();
+}
+
+function exportCSV() {
+  const selected = allLeads.filter(l => selectedIds.has(l.id));
+  if (!selected.length) { alert('Koi lead select nahi hai!'); return; }
+  const headers = ['Name', 'Handle', 'Email', 'Phone', 'Instagram', 'LinkedIn', 'Source', 'Score'];
+  const rows = selected.map(l => [
+    `"${l.name}"`, `"${l.handle}"`, `"${l.email}"`, `"${l.phone}"`,
+    `"${l.instaLink || ''}"`, `"${l.linkedinLink || ''}"`, l.source, l.score + '%'
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'leads.csv'; a.click();
 }
 </script>
 </body>
