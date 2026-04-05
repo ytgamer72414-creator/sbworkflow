@@ -367,7 +367,7 @@ function renderLeads() {
     return `<div class="lead-row ${sel ? 'selected' : ''}" onclick="toggleSelect(${lead.id})">
       <div class="td"><input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect(${lead.id})"/></div>
       <div class="td name-cell">
-        <span class="lead-name">${lead.name}</span>
+       <span class="lead-name">${lead.handle && lead.handle !== '—' ? lead.name.replace(lead.handle.replace('@',''),'').trim() : lead.name}</span>
         <span class="lead-handle">${lead.handle !== '—' ? lead.handle : ''}</span>
       </div>
       <div class="td">${lead.email ? `<span class="email-text">✉ ${lead.email}</span>` : '<span class="no-email">No email</span>'}</div>
