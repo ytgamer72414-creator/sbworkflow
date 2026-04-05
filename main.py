@@ -6,11 +6,19 @@ import httpx
 import re
 import os
 import pathlib
+import random
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "d3fd1e720fmsh6ff53a31e928ecdp19fa06jsn4d98e98c079c")
+# Two API keys - load balancing for double requests
+RAPIDAPI_KEYS = [
+    os.environ.get("RAPIDAPI_KEY1", "d3fd1e720fmsh6ff53a31e928ecdp19fa06jsn4d98e98c079c"),
+    os.environ.get("RAPIDAPI_KEY2", "6d7a7ca576msh6da794f299e2fb1p12c27ajsne4e021e54882"),
+]
+
+def get_key():
+    return random.choice(RAPIDAPI_KEYS)
 
 class SearchRequest(BaseModel):
     niche: str
@@ -27,10 +35,11 @@ def extract_phone(text):
     return m.group(0).strip() if m else ""
 
 async def search_google(niche, city, max_items):
+    key = get_key()
     query = f"{niche} {city} contact email".strip()
     url = "https://google-search74.p.rapidapi.com/"
     headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-key": key,
         "x-rapidapi-host": "google-search74.p.rapidapi.com",
         "Content-Type": "application/json"
     }
@@ -43,10 +52,9 @@ async def search_google(niche, city, max_items):
     for i, item in enumerate(results[:max_items]):
         desc = (item.get("description") or "") + " " + (item.get("url") or "")
         url_val = item.get("url") or ""
-        name = item.get("title") or "Unknown"
         leads.append({
             "id": i+1,
-            "name": name,
+            "name": item.get("title") or "Unknown",
             "handle": "—",
             "instaLink": url_val if "instagram.com" in url_val else None,
             "linkedinLink": url_val if "linkedin.com" in url_val else None,
@@ -61,45 +69,43 @@ async def search_google(niche, city, max_items):
     return leads
 
 async def search_instagram(niche, city, max_items):
-    # Search Instagram users by hashtag using stable API
-    url = "https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_followers_v2.php"
-    headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "instagram-scraper-stable-api.p.rapidapi.com",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    # Search for niche accounts via Google first, then get their followers
-    # Use hashtag search approach
+    key = get_key()
+    # Search Instagram accounts via Google
     search_url = "https://google-search74.p.rapidapi.com/"
-    search_headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
+    headers = {
+        "x-rapidapi-key": key,
         "x-rapidapi-host": "google-search74.p.rapidapi.com",
         "Content-Type": "application/json"
     }
     query = f"{niche} {city} site:instagram.com".strip()
     params = {"query": query, "limit": str(max_items), "related_keywords": "true"}
-    
+
     async with httpx.AsyncClient(timeout=30) as client:
-        res = await client.get(search_url, headers=search_headers, params=params)
+        res = await client.get(search_url, headers=headers, params=params)
         data = res.json()
-    
+
     results = data.get("results", [])
     leads = []
     for i, item in enumerate(results[:max_items]):
         url_val = item.get("url") or ""
         title = item.get("title") or ""
         desc = item.get("description") or ""
-        
-        # Extract Instagram username from URL
+
         username = ""
         if "instagram.com/" in url_val:
             parts = url_val.split("instagram.com/")
             if len(parts) > 1:
                 username = parts[1].split("/")[0].split("?")[0]
-        
+
+        # Clean name - remove username and Instagram suffix
+        clean_name = title
+        for suffix in [" • Instagram", " (@" + username + ")", username, "- Instagram"]:
+            clean_name = clean_name.replace(suffix, "")
+        clean_name = clean_name.strip()
+
         leads.append({
             "id": i+1,
-            "name": title.replace(" • Instagram", "").replace(" (@", "").split(")")[0] or username or "—",
+            "name": clean_name or username or "—",
             "handle": f"@{username}" if username else "—",
             "instaLink": f"https://instagram.com/{username}" if username else url_val,
             "linkedinLink": None,
@@ -114,37 +120,45 @@ async def search_instagram(niche, city, max_items):
     return leads
 
 async def search_linkedin(niche, city, max_items):
-    # Search LinkedIn via Google
-    url = "https://google-search74.p.rapidapi.com/"
+    key = get_key()
+    url = "https://realtime-linkdin-data-scraper.p.rapidapi.com/postSearch.php"
     headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "google-search74.p.rapidapi.com",
+        "x-rapidapi-key": key,
+        "x-rapidapi-host": "realtime-linkdin-data-scraper.p.rapidapi.com",
         "Content-Type": "application/json"
     }
-    query = f"{niche} {city} site:linkedin.com/company".strip()
-    params = {"query": query, "limit": str(max_items), "related_keywords": "true"}
-    
+    search_term = f"{niche} {city}".strip()
+    params = {"searchTerm": search_term}
+
     async with httpx.AsyncClient(timeout=30) as client:
         res = await client.get(url, headers=headers, params=params)
         data = res.json()
-    
-    results = data.get("results", [])
+
+    # Handle LinkedIn response
+    items = []
+    if isinstance(data, list):
+        items = data
+    elif isinstance(data, dict):
+        items = data.get("data", []) or data.get("results", []) or data.get("items", [])
+
     leads = []
-    for i, item in enumerate(results[:max_items]):
-        url_val = item.get("url") or ""
-        desc = item.get("description") or ""
+    for i, item in enumerate(items[:max_items]):
+        desc = (item.get("description") or item.get("text") or item.get("summary") or "")
+        author = item.get("author") or item.get("name") or item.get("companyName") or "—"
+        linkedin_url = item.get("url") or item.get("postUrl") or item.get("profileUrl") or ""
+
         leads.append({
             "id": i+1,
-            "name": item.get("title") or "—",
+            "name": author,
             "handle": "—",
             "instaLink": None,
-            "linkedinLink": url_val if "linkedin.com" in url_val else None,
+            "linkedinLink": linkedin_url if "linkedin.com" in linkedin_url else None,
             "email": extract_email(desc),
             "phone": extract_phone(desc),
-            "followers": "—",
+            "followers": item.get("followersCount") or "—",
             "niche": niche,
             "source": "LinkedIn",
-            "score": 60,
+            "score": 65 if extract_email(desc) else 50,
             "platform": "linkedin"
         })
     return leads
