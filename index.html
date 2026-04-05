@@ -1,0 +1,468 @@
+bash
+
+cat /home/claude/sbworkflow/public/index.html
+Output
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBWorkflow Lead Engine</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0a0f;color:#e8e8f0;font-family:'DM Sans','Segoe UI',sans-serif;min-height:100vh}
+  input,select,textarea{outline:none;font-family:inherit}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#111118}::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:3px}
+  .tab-btn{padding:7px 16px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;background:transparent;color:#666680;font-family:inherit}
+  .tab-btn.active{background:#6c63ff;color:#fff}
+  .tab-btn:hover:not(.active){color:#e8e8f0;background:#1e1e2e}
+  .btn{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;transition:all 0.2s}
+  .btn:disabled{opacity:0.45;cursor:not-allowed}
+  .inp{width:100%;padding:10px 12px;background:#16161f;border:1px solid #1e1e2e;border-radius:8px;color:#e8e8f0;font-size:13px;font-family:inherit;transition:border 0.2s}
+  .inp:focus{border-color:#6c63ff}
+  .card{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:16px}
+  .label{font-size:11px;color:#666680;display:block;margin-bottom:6px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+  .lead-row{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:13px 16px;cursor:pointer;display:grid;grid-template-columns:28px 1.8fr 1.6fr 1fr 1fr 72px;gap:10px;align-items:center;transition:all 0.15s;margin-bottom:8px}
+  .lead-row:hover{border-color:#6c63ff55;background:#13131e}
+  .lead-row.selected{background:#15152a;border-color:#6c63ff}
+  .lead-row.sent{border-color:#00e5a0}
+  .log-line{font-size:12px;margin-bottom:4px;padding:2px 0;line-height:1.5}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #6c63ff44;border-top-color:#6c63ff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px}
+  .platform-card{background:#111118;border:1px solid #1e1e2e;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.2s}
+  .platform-card:hover,.platform-card.active{border-color:#6c63ff;background:#15152a}
+  .empty-state{text-align:center;padding:60px 20px;color:#666680}
+  .empty-state .icon{font-size:40px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="border-bottom:1px solid #1e1e2e;padding:14px 28px;display:flex;align-items:center;gap:16px;background:#111118;position:sticky;top:0;z-index:100">
+  <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6c63ff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:17px">⚡</div>
+  <div>
+    <div style="font-weight:700;font-size:15px">SBWorkflow Lead Engine</div>
+    <div style="font-size:11px;color:#666680">Real Leads · Cold Outreach · klyperixproduction@gmail.com</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:6px">
+    <button class="tab-btn active" onclick="switchTab('search')" id="tab-search">🔍 Search</button>
+    <button class="tab-btn" onclick="switchTab('leads')" id="tab-leads">📋 Leads (<span id="lead-count">0</span>)</button>
+    <button class="tab-btn" onclick="switchTab('email')" id="tab-email">✉️ Outreach</button>
+    <button class="tab-btn" onclick="switchTab('setup')" id="tab-setup">⚙️ Setup</button>
+  </div>
+</div>
+
+<div style="padding:28px;max-width:1100px;margin:0 auto">
+
+<!-- ══ SEARCH TAB ══ -->
+<div id="pane-search">
+  <h2 style="margin-bottom:4px;font-size:22px">Lead Search</h2>
+  <p style="color:#666680;font-size:13px;margin-bottom:24px">Backend se Apify call hoti hai — CORS issue nahi, real data milta hai</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 120px auto;gap:12px;margin-bottom:20px;align-items:end">
+    <div>
+      <label class="label">Niche / Business Type</label>
+      <input class="inp" id="inp-niche" placeholder="restaurant, salon, real estate...">
+    </div>
+    <div>
+      <label class="label">City (Optional)</label>
+      <input class="inp" id="inp-city" placeholder="Mumbai, Dubai, London...">
+    </div>
+    <div>
+      <label class="label">Max Leads</label>
+      <input class="inp" id="inp-max" value="10" type="number" min="1" max="30">
+    </div>
+    <button class="btn" id="search-btn" onclick="handleSearch()" style="background:#6c63ff;color:#fff;padding:10px 24px;font-size:14px">
+      Search
+    </button>
+  </div>
+
+  <!-- Platform selector -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+    <div class="platform-card active" id="plat-google" onclick="selectPlatform('google')">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span>🔍</span><span style="font-weight:700;font-size:13px;color:#00e5a0">Google</span>
+        <span style="font-size:10px;background:#00e5a033;color:#00e5a0;padding:2px 7px;border-radius:20px;font-weight:700">FASTEST</span>
+      </div>
+      <p style="font-size:12px;color:#666680">15-40 sec. Instagram + LinkedIn dono ke results ek saath.</p>
+    </div>
+    <div class="platform-card" id="plat-instagram" onclick="selectPlatform('instagram')">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span>📸</span><span style="font-weight:700;font-size:13px;color:#E1306C">Instagram</span>
+      </div>
+      <p style="font-size:12px;color:#666680">Hashtag se real profiles. Bio mein email/phone milti hai.</p>
+    </div>
+    <div class="platform-card" id="plat-linkedin" onclick="selectPlatform('linkedin')">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span>💼</span><span style="font-weight:700;font-size:13px;color:#0077B5">LinkedIn</span>
+      </div>
+      <p style="font-size:12px;color:#666680">Company pages. Professional emails. B2B ke liye best.</p>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div id="log-box" style="display:none;background:#0d0d14;border:1px solid #1e1e2e;border-radius:10px;padding:14px 16px;max-height:220px;overflow-y:auto">
+    <div style="font-size:11px;color:#666680;margin-bottom:8px;font-weight:700;letter-spacing:0.06em">⚡ LIVE LOG</div>
+    <div id="log-lines"></div>
+  </div>
+</div>
+
+<!-- ══ LEADS TAB ══ -->
+<div id="pane-leads" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div>
+      <h2 style="margin-bottom:4px;font-size:22px">Leads (<span id="leads-h-count">0</span>)</h2>
+      <p style="color:#666680;font-size:12px" id="leads-subtitle">0 selected · 0 with email</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" onclick="selectAllWithEmail()" style="background:#6c63ff;color:#fff;font-size:12px">✓ Select All With Email</button>
+      <button class="btn" onclick="clearAllLeads()" style="background:#ff4f6a22;color:#ff4f6a;border:1px solid #ff4f6a44;font-size:12px">Clear All</button>
+    </div>
+  </div>
+  <div id="leads-list">
+    <div class="empty-state"><div class="icon">🎯</div><p>Search tab mein niche daal ke leads search karo</p></div>
+  </div>
+</div>
+
+<!-- ══ EMAIL TAB ══ -->
+<div id="pane-email" style="display:none">
+  <h2 style="margin-bottom:4px;font-size:22px">Cold Email Outreach</h2>
+  <p style="color:#666680;font-size:13px;margin-bottom:20px">Variables: <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{name}</code> <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{niche}</code> <code style="background:#1e1e2e;padding:2px 6px;border-radius:4px">{handle}</code></p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div>
+      <label class="label">Email Template</label>
+      <textarea class="inp" id="email-template" rows="14" style="resize:vertical">Subject: Partnership Opportunity
+
+Hi {name},
+
+I came across your profile and believe we can help grow your business significantly.
+
+We specialize in helping businesses like yours get more clients and increase revenue through strategic marketing.
+
+Would you be open to a quick 15-minute call this week?
+
+Best regards,
+SBWorkflow Team</textarea>
+      <button class="btn" id="send-btn" onclick="sendEmails()" style="background:#00e5a0;color:#000;font-weight:700;width:100%;margin-top:12px;padding:12px;font-size:14px">
+        ✉️ Send Emails
+      </button>
+    </div>
+    <div>
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:12px;font-size:13px;color:#666680;letter-spacing:0.04em">SELECTED LEADS</div>
+        <div id="email-preview"><p style="color:#666680;font-size:12px">Leads tab mein leads select karo</p></div>
+      </div>
+      <div class="card" style="margin-top:12px;background:#0d1a12;border-color:#00e5a033">
+        <div style="font-size:12px;color:#00e5a0;font-weight:700;margin-bottom:8px">✓ Spam Se Bachne Ke Tips</div>
+        <div style="font-size:12px;color:#666680;line-height:1.7">
+          • Har email ke beech 2.5 sec delay hai<br>
+          • Personal message likho, generic nahi<br>
+          • EmailJS se aapka Gmail use hoga<br>
+          • Din mein 50 se zyada mat bhejo
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETUP TAB ══ -->
+<div id="pane-setup" style="display:none">
+  <h2 style="margin-bottom:6px;font-size:22px">Setup</h2>
+  <p style="color:#666680;font-size:13px;margin-bottom:24px">EmailJS se Gmail connect karo — emails direct inbox mein jayenge</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:16px;font-size:13px">EmailJS Configuration</div>
+      <div style="margin-bottom:14px">
+        <label class="label">Service ID</label>
+        <input class="inp" id="ejs-service" placeholder="service_xxxxxxx">
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="label">Template ID</label>
+        <input class="inp" id="ejs-template-id" placeholder="template_xxxxxxx">
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="label">Public Key</label>
+        <input class="inp" id="ejs-pubkey" placeholder="xxxxxxxxxxxxxx">
+      </div>
+      <button class="btn" onclick="saveEjs()" style="background:#6c63ff;color:#fff;width:100%">Save Config</button>
+      <div style="font-size:12px;color:#666680;margin-top:12px;line-height:1.7">
+        1. emailjs.com pe free account banao<br>
+        2. Gmail service connect karo → Service ID milega<br>
+        3. Template banao → Template ID milega<br>
+        4. Account → General → Public Key copy karo
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-weight:700;margin-bottom:12px;font-size:13px">Apify Status</div>
+        <div style="font-size:13px;color:#00e5a0;margin-bottom:4px">✓ Token Connected</div>
+        <div style="font-size:12px;color:#666680;background:#0d0d14;padding:8px 10px;border-radius:6px;margin-top:8px;word-break:break-all">apify_api_KL...4uWqgQ</div>
+        <a href="https://console.apify.com/billing" target="_blank" style="font-size:12px;color:#6c63ff;display:block;margin-top:10px">→ Apify Usage Check karo</a>
+      </div>
+
+      <div class="card" style="background:#1a0d0d;border-color:#ff4f6a33">
+        <div style="font-weight:700;margin-bottom:10px;font-size:13px;color:#ff4f6a">⚠️ Deploy Karna Hai?</div>
+        <div style="font-size:12px;color:#666680;line-height:1.8">
+          Is tool ko properly chalane ke liye Railway pe deploy karo.<br><br>
+          <strong style="color:#e8e8f0">railway.app</strong> → New Project → Deploy from GitHub<br><br>
+          Environment variable add karo:<br>
+          <code style="background:#0d0d14;padding:3px 8px;border-radius:4px;color:#00e5a0">APIFY_TOKEN=apify_api_KL...WqgQ</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<script>
+// ════════════════════════════════════
+// CONFIG — deployed URL yahan daalo
+// ════════════════════════════════════
+// Jab Railway pe deploy ho jaaye toh ye URL update karo:
+// const API_BASE = "https://your-project.railway.app";
+// Local test ke liye:
+const API_BASE = window.location.origin; // same server se chalega
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let leads = [];
+let selected = new Set();
+let emailSentIds = new Set();
+let currentPlatform = "google";
+let isLoading = false;
+let ejsConfig = { serviceId: "", templateId: "", publicKey: "" };
+
+// ════════════════════════════════════
+// TABS
+// ════════════════════════════════════
+function switchTab(tab) {
+  ['search','leads','email','setup'].forEach(t => {
+    document.getElementById('pane-'+t).style.display = t===tab?'block':'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='email') updateEmailPreview();
+  if(tab==='leads') renderLeads();
+}
+
+// ════════════════════════════════════
+// PLATFORM
+// ════════════════════════════════════
+function selectPlatform(p) {
+  currentPlatform = p;
+  ['google','instagram','linkedin'].forEach(pl => {
+    document.getElementById('plat-'+pl).classList.toggle('active', pl===p);
+  });
+}
+
+// ════════════════════════════════════
+// LOG
+// ════════════════════════════════════
+function addLog(msg, type='info') {
+  const box = document.getElementById('log-box');
+  const lines = document.getElementById('log-lines');
+  box.style.display = 'block';
+  const colors = {info:'#8888aa', success:'#00e5a0', error:'#ff4f6a', warn:'#f5c542'};
+  const icons = {info:'›', success:'✓', error:'✗', warn:'⚠'};
+  const t = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.style.color = colors[type]||'#8888aa';
+  div.innerHTML = `<span style="opacity:0.4">[${t}]</span> ${icons[type]||'›'} ${msg}`;
+  lines.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+function clearLog() { document.getElementById('log-lines').innerHTML=''; }
+
+// ════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════
+async function handleSearch() {
+  if(isLoading) return;
+  const niche = document.getElementById('inp-niche').value.trim();
+  const city = document.getElementById('inp-city').value.trim();
+  const maxItems = parseInt(document.getElementById('inp-max').value)||10;
+
+  if(!niche){alert('Niche zaroor daalo — e.g. restaurant, salon, gym');return;}
+
+  isLoading = true;
+  clearLog();
+  const btn = document.getElementById('search-btn');
+  btn.innerHTML = '<span class="spinner"></span>Searching...';
+  btn.disabled = true;
+
+  addLog(`Search: "${niche}" ${city?'in '+city:''} via ${currentPlatform.toUpperCase()}`);
+  addLog('Backend se Apify call ho rahi hai...');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/search`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ niche, city, platform: currentPlatform, maxItems })
+    });
+
+    if(!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Server error: '+res.status);
+    }
+
+    const data = await res.json();
+    addLog(`Total results: ${data.total}`, data.total>0?'success':'warn');
+
+    if(data.total === 0) {
+      addLog('Koi lead nahi mila. Niche ya city change karo, ya Google platform try karo.', 'warn');
+    } else {
+      const existingKeys = new Set(leads.map(l=>l.handle+l.name));
+      const fresh = data.leads.filter(l=>!existingKeys.has(l.handle+l.name));
+      leads = [...leads, ...fresh.map((l,i)=>({...l, id: Date.now()+i}))];
+      updateLeadCount();
+      addLog(`✅ ${fresh.length} naye leads add hue!`, 'success');
+      setTimeout(()=>switchTab('leads'), 1200);
+    }
+  } catch(err) {
+    addLog('Error: '+err.message, 'error');
+    if(err.message.includes('fetch')) {
+      addLog('⚠️ Backend nahi mila — Railway pe deploy karo (Setup tab dekho)', 'warn');
+    }
+  }
+
+  isLoading = false;
+  btn.innerHTML = 'Search';
+  btn.disabled = false;
+}
+
+// ════════════════════════════════════
+// LEADS
+// ════════════════════════════════════
+function updateLeadCount() {
+  document.getElementById('lead-count').textContent = leads.length;
+  document.getElementById('leads-h-count').textContent = leads.length;
+  const withEmail = leads.filter(l=>l.email).length;
+  document.getElementById('leads-subtitle').textContent =
+    `${selected.size} selected · ${withEmail} with email`;
+}
+
+function renderLeads() {
+  updateLeadCount();
+  const container = document.getElementById('leads-list');
+  if(leads.length===0){
+    container.innerHTML=`<div class="empty-state"><div class="icon">🎯</div><p>Search tab mein niche daal ke leads search karo</p></div>`;
+    return;
+  }
+  container.innerHTML = leads.map(lead=>{
+    const isSel = selected.has(lead.id);
+    const isSent = emailSentIds.has(lead.id);
+    const scoreColor = lead.score>=70?'#00e5a0':lead.score>=50?'#f5c542':'#ff4f6a';
+    const link = lead.instaLink||lead.linkedinLink||'#';
+    const srcColor = {Instagram:'#E1306C',LinkedIn:'#0077B5',Google:'#4285F4'}[lead.source]||'#666680';
+    return `<div class="lead-row${isSel?' selected':''}${isSent?' sent':''}" onclick="toggleLead(${lead.id})">
+      <input type="checkbox" ${isSel?'checked':''} onclick="event.stopPropagation();toggleLead(${lead.id})" style="cursor:pointer;accent-color:#6c63ff;width:16px;height:16px">
+      <div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:2px">${lead.name}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${lead.handle!=='—'?`<a href="${link}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:${srcColor};text-decoration:none">${lead.handle}</a>`:''}
+          <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#1e1e2e;color:${srcColor}">${lead.source}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:${lead.email?'#00e5a0':'#444460'}">${lead.email||'No email'}</div>
+      <div style="font-size:12px;color:${lead.phone?'#e8e8f0':'#444460'}">${lead.phone||'—'}</div>
+      <div style="font-size:12px;color:#666680">👥 ${lead.followers}<br><span style="font-size:11px">${lead.niche}</span></div>
+      <div style="text-align:right">
+        <span style="font-size:13px;font-weight:700;color:${scoreColor}">${lead.score}%</span>
+        ${isSent?'<div style="font-size:10px;color:#00e5a0;margin-top:2px">✓ Sent</div>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleLead(id) {
+  if(selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  renderLeads();
+  updateEmailPreview();
+}
+
+function selectAllWithEmail() {
+  leads.filter(l=>l.email).forEach(l=>selected.add(l.id));
+  renderLeads(); updateEmailPreview();
+}
+
+function clearAllLeads() {
+  if(!confirm('Saare leads delete karein?')) return;
+  leads=[]; selected.clear(); emailSentIds.clear();
+  renderLeads(); updateLeadCount();
+}
+
+// ════════════════════════════════════
+// EMAIL
+// ════════════════════════════════════
+function updateEmailPreview() {
+  const selLeads = leads.filter(l=>selected.has(l.id));
+  const withEmail = selLeads.filter(l=>l.email).length;
+  document.getElementById('send-btn').textContent = `✉️ Send to ${withEmail} leads`;
+  const container = document.getElementById('email-preview');
+  if(!selLeads.length){
+    container.innerHTML='<p style="color:#666680;font-size:12px">Leads tab mein leads select karo</p>';
+    return;
+  }
+  container.innerHTML = selLeads.map(l=>`
+    <div style="font-size:12px;padding:8px 0;border-bottom:1px solid #1e1e2e;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:600">${l.name}</span>
+      <span style="color:${l.email?'#00e5a0':'#ff4f6a'};font-size:11px">${l.email||'No email'}</span>
+    </div>
+  `).join('');
+}
+
+function saveEjs() {
+  ejsConfig.serviceId = document.getElementById('ejs-service').value.trim();
+  ejsConfig.templateId = document.getElementById('ejs-template-id').value.trim();
+  ejsConfig.publicKey = document.getElementById('ejs-pubkey').value.trim();
+  alert('✅ EmailJS config saved!');
+}
+
+async function sendEmails() {
+  const targets = leads.filter(l=>selected.has(l.id)&&l.email);
+  if(!targets.length){alert('Koi selected lead ke paas email nahi hai.');return;}
+  if(!ejsConfig.serviceId||!ejsConfig.templateId||!ejsConfig.publicKey){
+    alert('Pehle Setup tab mein EmailJS config karo aur Save karo.');return;
+  }
+  const btn = document.getElementById('send-btn');
+  btn.innerHTML='<span class="spinner"></span>Sending...';
+  btn.disabled=true;
+
+  emailjs.init(ejsConfig.publicKey);
+  let ok=0,fail=0;
+  const template = document.getElementById('email-template').value;
+
+  for(const lead of targets){
+    try{
+      const lines = template.split('\n');
+      const subject = lines[0].replace(/^Subject:\s*/i,'').trim();
+      const body = lines.slice(2).join('\n').trim()
+        .replace(/{name}/g,lead.name)
+        .replace(/{niche}/g,lead.niche)
+        .replace(/{handle}/g,lead.handle);
+      await emailjs.send(ejsConfig.serviceId,ejsConfig.templateId,{
+        to_email:lead.email,from_name:'SBWorkflow',subject,message:body
+      });
+      emailSentIds.add(lead.id);
+      ok++;
+      await new Promise(r=>setTimeout(r,2500));
+    }catch(e){fail++;}
+  }
+
+  btn.textContent='✉️ Send Emails';
+  btn.disabled=false;
+  renderLeads();
+  alert(`✅ ${ok} emails bheje.\n${fail?`❌ ${fail} fail.`:''}`);
+}
+</script>
+</body>
+</html>
